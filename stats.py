@@ -90,6 +90,33 @@ class GameDBReader:
                 pt = datetime.datetime.strptime(player_stats.attrib['min'],'%M:%S')
                 return pt.second + pt.minute*60
 
+def offensive_efficiency(three_p_made, two_p_made, assists_made, three_p_attempts, two_p_attempts, turnovers, off_rebounds):
+    return float(three_p_made + two_p_made  + assists_made) / float(three_p_attempts + two_p_attempts + assists_made + turnovers - off_rebounds)
+
+def get_team_oe(files,team_name):
+    summary = {}
+    summary['3pm'] = 0
+    summary['2pm'] = 0
+    summary['3pa'] = 0
+    summary['2pa'] = 0
+    summary['ass'] = 0
+    summary['tov'] = 0
+    summary['orb'] = 0
+    
+    for game_reader in files:
+        for team in game_reader.GetTeams():
+            if team == team_name:
+                summary['3pm'] = summary['3pm'] + game_reader.Get3PointersMadeByTeam(team)
+                summary['2pm'] = summary['2pm'] + game_reader.Get2PointersMadeByTeam(team)
+                summary['3pa'] = summary['3pa'] + game_reader.Get3PointersAttemptsByTeam(team)
+                summary['2pa'] = summary['2pa'] + game_reader.Get2PointersAttemptsByTeam(team)
+                summary['ass'] = summary['ass'] + game_reader.GetAssistsByTeam(team)
+                summary['tov'] = summary['tov'] + game_reader.GetTurnoversByTeam(team)
+                summary['orb'] = summary['orb'] + game_reader.GetOffensiveReboundsByTeam(team)
+    return offensive_efficiency(summary['3pm'], summary['2pm'], summary['ass'], summary['3pa'], summary['2pa'], summary['tov'], summary['orb'])              
+    
+
+
 parser = argparse.ArgumentParser(description='utility to process information from games')
 
 parser.add_argument('--print_teams', action='store_true',dest='print_teams', default=False, help='print teams')
@@ -113,23 +140,22 @@ for f in listdir(args.dir_name):
         if f.endswith('.xml'):
            files.append(GameDBReader(f))
 
+teams_set = Set()
+for game_reader in files:
+    for team in game_reader.GetTeams():
+        teams_set.add(team)
+
 if args.print_teams:
-    teams_set = Set()
-    for game_reader in files:
-        for team in game_reader.GetTeams():
-            teams_set.add(team)
     print teams_set
         
- if args.print_team_oe:
-    for teams in game_reader.GetTeams():
-        if teams == args.team_name:
-            OE = float(game_reader.Get3PointersMadeByTeam(teams) + game_reader.Get2PointersMadeByTeam(teams) + game_reader.GetAssistsByTeam(teams)) / float(game_reader.Get3PointersAttemptsByTeam(teams) + game_reader.Get2PointersAttemptsByTeam(teams) + game_reader.GetAssistsByTeam(teams) + game_reader.GetTurnoversByTeam(teams) - game_reader.GetOffensiveReboundsByTeam(teams) )
-            print teams + ' ' + str(OE)
+if args.print_team_oe:
+    print args.team_name + ' ' + str(get_team_oe(files,args.team_name))
 
+    
 if args.print_all_teams_oe:
-    for teams in game_reader.GetTeams():
-            OE = float(game_reader.Get3PointersMadeByTeam(teams) + game_reader.Get2PointersMadeByTeam(teams) + game_reader.GetAssistsByTeam(teams)) / float(game_reader.Get3PointersAttemptsByTeam(teams) + game_reader.Get2PointersAttemptsByTeam(teams) + game_reader.GetAssistsByTeam(teams) + game_reader.GetTurnoversByTeam(teams) - game_reader.GetOffensiveReboundsByTeam(teams) )
-            print teams + ' ' + str(OE)
+    for team in teams_set:
+        print team + ' ' + str(get_team_oe(files,team))
+    
 
 if args.print_all_players_points_per_minute:
     for player in game_reader.GetPlayersByTeam(args.team_name):
