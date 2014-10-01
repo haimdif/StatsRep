@@ -2,6 +2,9 @@ import xml.etree.ElementTree as ET
 import argparse
 import datetime
 import time
+from os import listdir
+from os.path import isfile, join
+from sets import Set
 
 class GameDBReader:
 
@@ -97,17 +100,25 @@ parser.add_argument('--print_all_teams_oe', action='store_true',dest='print_all_
 
 parser.add_argument('--team', dest='team_name', help='the team to analyze')
 
-parser.add_argument('--file_name', dest='file_name', help='the file to analyze')
+parser.add_argument('--dir_name', dest='dir_name', help='the directory containing the files to analyze')
 
 parser.add_argument('--print_all_players_points_per_minute', action='store_true',dest='print_all_players_points_per_minute', default=False, help='print all teams OE')
 
 args = parser.parse_args()
 
-game_reader = GameDBReader(args.file_name)
+files = []
+
+for f in listdir(args.dir_name):
+    if isfile(join(args.dir_name,f)):
+        if f.endswith('.xml'):
+           files.append(GameDBReader(f))
 
 if args.print_teams:
-    for team in game_reader.GetTeams():
-        print team
+    teams_set = Set()
+    for game_reader in files:
+        for team in game_reader.GetTeams():
+            teams_set.add(team)
+    print teams_set
         
 if args.print_team_oe:
     for teams in game_reader.GetTeams():
