@@ -129,7 +129,9 @@ parser.add_argument('--team', dest='team_name', help='the team to analyze')
 
 parser.add_argument('--dir_name', dest='dir_name', help='the directory containing the files to analyze')
 
-parser.add_argument('--print_all_players_points_per_minute', action='store_true',dest='print_all_players_points_per_minute', default=False, help='print all teams OE')
+parser.add_argument('--print_all_players_points_per_minute', action='store_true',dest='print_all_players_points_per_minute', default=False, help='print all players points per minute of a specified teams')
+
+parser.add_argument('--print_all_players_points_per_minute_all_teams', action='store_true',dest='print_all_players_points_per_minute_all_teams', default=False, help='print all teams points per minute in all teams')
 
 args = parser.parse_args()
 
@@ -158,12 +160,27 @@ if args.print_all_teams_oe:
     
 
 if args.print_all_players_points_per_minute:
-    for player in game_reader.GetPlayersByTeam(args.team_name):
-        if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
-            print player + ' ' +  str(float(game_reader.GetPointsByPlayer(player)*60) / float(game_reader.GetTimePlayedInSecondsByPlayer(player)))
+    for game_reader in files:
+        print 'game:'        
+        for player in game_reader.GetPlayersByTeam(args.team_name):
+            if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
+                print player + ' ' +  str(float(game_reader.GetPointsByPlayer(player)*60) / float(game_reader.GetTimePlayedInSecondsByPlayer(player)))
 
 
-   
+if args.print_all_players_points_per_minute_all_teams:
+    for team in teams_set:
+        cur_players_minutes = {}
+        cur_players_points = {}
+        for game_reader in files:
+            for player in game_reader.GetPlayersByTeam(team):
+                if 
+                cur_players_minutes[player] = cur_players_minutes.get(player, 0) +  game_reader.GetTimePlayedInSecondsByPlayer(player)
+                cur_players_points[player]  = cur_players_points.get([player, 0) + game_reader.GetPointsByPlayer(player)
+        for player in cur_players_minutes.keys:
+            print player + ' ' + str(float(cur_players_points[player]*60)/float(cur_players_minutes[player]))
+                
+
+        
     
     
 
