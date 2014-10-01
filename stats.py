@@ -120,7 +120,7 @@ if args.print_teams:
             teams_set.add(team)
     print teams_set
         
-if args.print_team_oe:
+ if args.print_team_oe:
     for teams in game_reader.GetTeams():
         if teams == args.team_name:
             OE = float(game_reader.Get3PointersMadeByTeam(teams) + game_reader.Get2PointersMadeByTeam(teams) + game_reader.GetAssistsByTeam(teams)) / float(game_reader.Get3PointersAttemptsByTeam(teams) + game_reader.Get2PointersAttemptsByTeam(teams) + game_reader.GetAssistsByTeam(teams) + game_reader.GetTurnoversByTeam(teams) - game_reader.GetOffensiveReboundsByTeam(teams) )
