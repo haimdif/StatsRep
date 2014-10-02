@@ -15,6 +15,9 @@ class GameDBReader:
         self.side_to_team = {}
         self.player_to_team = {}
         self.player_to_code = {}
+        self.team_to_starters = {}
+        self.team_to_starters['0'] = Set()
+        self.team_to_starters['1'] = Set()
                          
         for team in self.root.findall('.//homename'):
             self.team_to_side[team.text] = '1'
@@ -29,8 +32,20 @@ class GameDBReader:
                 if player.attrib['name'] != 'Team':
                     self.player_to_code[player.attrib['name']] = player.attrib['code']
                     self.player_to_team[player.attrib['name']] = players.attrib['side']
+                    if player.attrib['starter'] == '1':
+                        self.team_to_starters[players.attrib['side']].add(player.attrib['name'])
             
-            
+
+    def InitPlayByPlayIter(self):
+        self.iter = self.root.iterfind('.//film')
+        
+    def GetNext(self):
+        self.cur_elem = self.iter.next()
+
+    def GetCurElement(self):
+        return self.cur_elem.attrib['score']
+    
+    
     def GetTeams(self):
         return self.team_to_side.keys()
 
@@ -89,6 +104,9 @@ class GameDBReader:
             if player_stats.attrib['name'] == name:
                 pt = datetime.datetime.strptime(player_stats.attrib['min'],'%M:%S')
                 return pt.second + pt.minute*60
+    def GetStarters(self,team_name):
+        return self.team_to_starters[ self.team_to_side[team_name] ] 
+    
 
 def offensive_efficiency(three_p_made, two_p_made, assists_made, three_p_attempts, two_p_attempts, turnovers, off_rebounds):
     return float(three_p_made + two_p_made  + assists_made) / float(three_p_attempts + two_p_attempts + assists_made + turnovers - off_rebounds)
@@ -132,6 +150,8 @@ parser.add_argument('--dir_name', dest='dir_name', help='the directory containin
 parser.add_argument('--print_all_players_points_per_minute', action='store_true',dest='print_all_players_points_per_minute', default=False, help='print all players points per minute of a specified teams')
 
 parser.add_argument('--print_all_players_points_per_minute_all_teams', action='store_true',dest='print_all_players_points_per_minute_all_teams', default=False, help='print all teams points per minute in all teams')
+
+parser.add_argument('--print_points_per_players', action='store_true',dest='print_points_per_players', default=False, help='print points per five players')
 
 args = parser.parse_args()
 
@@ -180,11 +200,19 @@ if args.print_all_players_points_per_minute_all_teams:
                 print player + ' ' + '0'
             else:
                 print player + ' ' + str(float(cur_players_points[player]*60)/float(cur_players_minutes[player]))
-                
+
+if args.print_points_per_players:
+    for game_reader in files:
+        game_reader.InitPlayByPlayIter()
+        while True:
+            game_reader.GetNext()
+            print game_reader.GetCurElement()
+        print game_reader.GetStarters(args.team_name)
+
 
         
     
     
 
  
-    
+     
