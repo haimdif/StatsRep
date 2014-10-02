@@ -173,11 +173,13 @@ if args.print_all_players_points_per_minute_all_teams:
         cur_players_points = {}
         for game_reader in files:
             for player in game_reader.GetPlayersByTeam(team):
-                if 
                 cur_players_minutes[player] = cur_players_minutes.get(player, 0) +  game_reader.GetTimePlayedInSecondsByPlayer(player)
-                cur_players_points[player]  = cur_players_points.get([player, 0) + game_reader.GetPointsByPlayer(player)
-        for player in cur_players_minutes.keys:
-            print player + ' ' + str(float(cur_players_points[player]*60)/float(cur_players_minutes[player]))
+                cur_players_points[player]  = cur_players_points.get(player, 0) + game_reader.GetPointsByPlayer(player)
+        for player in cur_players_minutes.keys():
+            if cur_players_minutes[player]  == 0:
+                print player + ' ' + '0'
+            else:
+                print player + ' ' + str(float(cur_players_points[player]*60)/float(cur_players_minutes[player]))
                 
 
         
