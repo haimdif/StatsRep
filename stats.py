@@ -5,6 +5,7 @@ import time
 from os import listdir
 from os.path import isfile, join
 from sets import Set
+from sets import ImmutableSet
 
 class GameDBReader:
 
@@ -15,6 +16,7 @@ class GameDBReader:
         self.side_to_team = {}
         self.player_to_team = {}
         self.player_to_code = {}
+        self.code_to_player = {} 
         self.team_to_starters = {}
         self.team_to_starters['0'] = Set()
         self.team_to_starters['1'] = Set()
@@ -31,6 +33,7 @@ class GameDBReader:
             for player in players.findall('.//player'):
                 if player.attrib['name'] != 'Team':
                     self.player_to_code[player.attrib['name']] = player.attrib['code']
+                    self.code_to_player[player.attrib['code']] = player.attrib['name']
                     self.player_to_team[player.attrib['name']] = players.attrib['side']
                     if player.attrib['starter'] == '1':
                         self.team_to_starters[players.attrib['side']].add(player.attrib['name'])
@@ -42,9 +45,27 @@ class GameDBReader:
     def GetNext(self):
         self.cur_elem = self.iter.next()
 
-    def GetCurElement(self):
+    def GetCurScore(self):
         return self.cur_elem.attrib['score']
     
+    def IsCurrentSwitch(self,team_name):
+        try:
+            if (self.cur_elem.attrib['fccode'] == '1011'):
+                if self.cur_elem.attrib['side'] == '1':
+                    side = '0'
+                if self.cur_elem.attrib['side'] == '0':
+                    side = '1'
+                if (side == self.team_to_side[team_name]):
+                    return True
+            return False
+        except KeyError:
+            return False
+
+    def GetCurrentPlayerOut(self):
+        return self.code_to_player[self.cur_elem.attrib['out']]
+
+    def GetCurrentPlayerIn(self):
+        return self.code_to_player[self.cur_elem.attrib['in']]
     
     def GetTeams(self):
         return self.team_to_side.keys()
@@ -104,6 +125,7 @@ class GameDBReader:
             if player_stats.attrib['name'] == name:
                 pt = datetime.datetime.strptime(player_stats.attrib['min'],'%M:%S')
                 return pt.second + pt.minute*60
+            
     def GetStarters(self,team_name):
         return self.team_to_starters[ self.team_to_side[team_name] ] 
     
@@ -202,12 +224,26 @@ if args.print_all_players_points_per_minute_all_teams:
                 print player + ' ' + str(float(cur_players_points[player]*60)/float(cur_players_minutes[player]))
 
 if args.print_points_per_players:
+    points_scored_by_fivers = {}
     for game_reader in files:
         game_reader.InitPlayByPlayIter()
+        cur_fivers = game_reader.GetStarters(args.team_name)
+        key_fivers = ImmutableSet(cur_fivers)
+        points_scored_by_fivers[key_fivers] = 0 
         while True:
-            game_reader.GetNext()
-            print game_reader.GetCurElement()
-        print game_reader.GetStarters(args.team_name)
+            try:
+                game_reader.GetNext()
+                if game_reader.IsCurrentSwitch(args.team_name):
+                    cur_fivers.remove(game_reader.GetCurrentPlayerOut())
+                    cur_fivers.add(game_reader.GetCurrentPlayerIn())
+
+                    key_fivers = ImmutableSet(cur_fivers)
+                    points_scored_by_fivers[key_fivers] = points_scored_by_fivers.get(key_fivers, 0)
+            except StopIteration:
+                break
+        for fivers in points_scored_by_fivers.keys():
+            print fivers
+        
 
 
         
