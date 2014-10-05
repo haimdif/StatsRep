@@ -48,6 +48,10 @@ class GameDBReader:
     def GetCurScore(self):
         return self.cur_elem.attrib['score']
 
+    def GetCurrentTimeStamp(self):
+        pt = datetime.datetime.strptime(self.cur_elem.attrib['min'],'%M:%S')
+        return pt.second + pt.minute*60
+
     def GetCurrentScored(self):
         if self.cur_elem.attrib['shottype'] == '4':
             return 1
@@ -59,8 +63,6 @@ class GameDBReader:
             return 2
         if self.cur_elem.attrib['shottype'] == '3':
             return 3
-        
-        
     
     def IsCurrentScored(self,team_name):
         try:
@@ -252,18 +254,24 @@ if args.print_all_players_points_per_minute_all_teams:
 
 if args.print_points_per_players:
     points_scored_by_fivers = {}
+    seconds_played_by_fivers = {}
     for game_reader in files:
         game_reader.InitPlayByPlayIter()
+        cur_timestamp = 0 
         cur_fivers = game_reader.GetStarters(args.team_name)
         key_fivers = ImmutableSet(cur_fivers)
-        points_scored_by_fivers[key_fivers] = 0 
+        points_scored_by_fivers[key_fivers] = 0
+        seconds_played_by_fivers[key_fivers] = 0 
         while True:
             try:
                 game_reader.GetNext()
                 if game_reader.IsCurrentSwitch(args.team_name):
+                    key_fivers = ImmutableSet(cur_fivers)
+                    seconds_played_by_fivers[key_fivers] = seconds_played_by_fivers.get(key_fivers,0) + game_reader.GetCurrentTimeStamp() - cur_timestamp
+                    cur_timestamp = game_reader.GetCurrentTimeStamp()
                     cur_fivers.remove(game_reader.GetCurrentPlayerOut())
                     cur_fivers.add(game_reader.GetCurrentPlayerIn())
-
+                    
                 if (game_reader.IsCurrentScored(args.team_name)):
                     key_fivers = ImmutableSet(cur_fivers)
                     points_scored_by_fivers[key_fivers] = points_scored_by_fivers.get(key_fivers, 0) + game_reader.GetCurrentScored()
@@ -271,7 +279,7 @@ if args.print_points_per_players:
             except StopIteration:
                 break
         for fivers in points_scored_by_fivers.keys():
-            print str(fivers) + ' ' + str(points_scored_by_fivers[fivers])
+            print str(float(points_scored_by_fivers[fivers])*60/seconds_played_by_fivers[fivers]) + ' ' + str(points_scored_by_fivers[fivers]) + ' ' + str(seconds_played_by_fivers[fivers]) + ' ' + str(fivers)
     
     
 
