@@ -47,7 +47,34 @@ class GameDBReader:
 
     def GetCurScore(self):
         return self.cur_elem.attrib['score']
+
+    def GetCurrentScored(self):
+        if self.cur_elem.attrib['shottype'] == '4':
+            return 1
+        if self.cur_elem.attrib['shottype'] == '2':
+            return 2
+        if self.cur_elem.attrib['shottype'] == '1':
+            return 2
+        if self.cur_elem.attrib['shottype'] == '5':
+            return 2
+        if self.cur_elem.attrib['shottype'] == '3':
+            return 3
+        
+        
     
+    def IsCurrentScored(self,team_name):
+        try:
+            if (self.cur_elem.attrib['fccode'] == '1000'):
+                if self.cur_elem.attrib['side'] == '1':
+                    side = '0'
+                if self.cur_elem.attrib['side'] == '0':
+                    side = '1'
+                if (side == self.team_to_side[team_name]):
+                    return True
+            return False
+        except KeyError:
+            return False
+        
     def IsCurrentSwitch(self,team_name):
         try:
             if (self.cur_elem.attrib['fccode'] == '1011'):
@@ -237,16 +264,14 @@ if args.print_points_per_players:
                     cur_fivers.remove(game_reader.GetCurrentPlayerOut())
                     cur_fivers.add(game_reader.GetCurrentPlayerIn())
 
+                if (game_reader.IsCurrentScored(args.team_name)):
                     key_fivers = ImmutableSet(cur_fivers)
-                    points_scored_by_fivers[key_fivers] = points_scored_by_fivers.get(key_fivers, 0)
+                    points_scored_by_fivers[key_fivers] = points_scored_by_fivers.get(key_fivers, 0) + game_reader.GetCurrentScored()
+                    
             except StopIteration:
                 break
         for fivers in points_scored_by_fivers.keys():
-            print fivers
-        
-
-
-        
+            print str(fivers) + ' ' + str(points_scored_by_fivers[fivers])
     
     
 
