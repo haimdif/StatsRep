@@ -222,12 +222,12 @@ if args.print_teams:
     print teams_set
         
 if args.print_team_oe:
-    print args.team_name + ' ' + str(get_team_oe(files,args.team_name))
+    print str(get_team_oe(files,args.team_name)) + ',' + args.team_name
 
     
 if args.print_all_teams_oe:
     for team in teams_set:
-        print team + ' ' + str(get_team_oe(files,team))
+        print str(get_team_oe(files,team)) + ',' + team
     
 
 if args.print_all_players_points_per_minute:
