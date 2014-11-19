@@ -297,7 +297,7 @@ if args.print_points_per_players:
                     
                 if (game_reader.IsCurrentAllowedScore(args.team_name)):
                     key_fivers = ImmutableSet(cur_fivers)
-                    points_allowed_by_fivers[key_fivers] = points_scored_by_fivers.get(key_fivers, 0) + game_reader.GetCurrentScored()
+                    points_allowed_by_fivers[key_fivers] = points_allowed_by_fivers.get(key_fivers, 0) + game_reader.GetCurrentScored()
 
                     
             except StopIteration:
