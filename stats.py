@@ -257,29 +257,40 @@ if args.print_points_per_players:
     seconds_played_by_fivers = {}
     for game_reader in files:
         game_reader.InitPlayByPlayIter()
-        cur_timestamp = 0 
-        cur_fivers = game_reader.GetStarters(args.team_name)
+        cur_timestamp = 0
+        try:
+            cur_fivers = game_reader.GetStarters(args.team_name)
+        except KeyError:
+            continue
         key_fivers = ImmutableSet(cur_fivers)
-        points_scored_by_fivers[key_fivers] = 0
-        seconds_played_by_fivers[key_fivers] = 0 
         while True:
             try:
                 game_reader.GetNext()
+                current_play_timestamp = game_reader.GetCurrentTimeStamp()                    
+
                 if game_reader.IsCurrentSwitch(args.team_name):
                     key_fivers = ImmutableSet(cur_fivers)
-                    seconds_played_by_fivers[key_fivers] = seconds_played_by_fivers.get(key_fivers,0) + game_reader.GetCurrentTimeStamp() - cur_timestamp
-                    cur_timestamp = game_reader.GetCurrentTimeStamp()
+                    seconds_played_by_fivers[key_fivers] = seconds_played_by_fivers.get(key_fivers,0) + current_play_timestamp - cur_timestamp
+                    cur_timestamp = current_play_timestamp
                     cur_fivers.remove(game_reader.GetCurrentPlayerOut())
                     cur_fivers.add(game_reader.GetCurrentPlayerIn())
+
                     
                 if (game_reader.IsCurrentScored(args.team_name)):
                     key_fivers = ImmutableSet(cur_fivers)
                     points_scored_by_fivers[key_fivers] = points_scored_by_fivers.get(key_fivers, 0) + game_reader.GetCurrentScored()
                     
             except StopIteration:
+                key_fivers = ImmutableSet(cur_fivers)
+                seconds_played_by_fivers[key_fivers] = seconds_played_by_fivers.get(key_fivers,0) + current_play_timestamp - cur_timestamp
                 break
-        for fivers in points_scored_by_fivers.keys():
-            print str(float(points_scored_by_fivers[fivers])*60/seconds_played_by_fivers[fivers]) + ' ' + str(points_scored_by_fivers[fivers]) + ' ' + str(seconds_played_by_fivers[fivers]) + ' ' + str(fivers)
+
+            
+    for fivers in seconds_played_by_fivers.keys():
+        try:
+            print str(float(points_scored_by_fivers.get(fivers,0))*60/seconds_played_by_fivers[fivers]) + ',' + str(points_scored_by_fivers.get(fivers,0)) + ',' + str(seconds_played_by_fivers[fivers]) + ',' + str(fivers)
+        except ZeroDivisionError:
+            continue
     
     
 
