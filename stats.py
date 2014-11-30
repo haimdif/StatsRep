@@ -270,6 +270,7 @@ if args.print_points_per_players:
     points_scored_by_fivers = {}
     seconds_played_by_fivers = {}
     points_allowed_by_fivers = {}
+    total = 0 
     for game_reader in files:
         game_reader.InitPlayByPlayIter()
         cur_timestamp = 0
@@ -298,6 +299,8 @@ if args.print_points_per_players:
                 if (game_reader.IsCurrentAllowedScore(args.team_name)):
                     key_fivers = ImmutableSet(cur_fivers)
                     points_allowed_by_fivers[key_fivers] = points_allowed_by_fivers.get(key_fivers, 0) + game_reader.GetCurrentScored()
+                    total = total + game_reader.GetCurrentScored()
+                    print str(key_fivers) + ',' + str(total)
 
                     
             except StopIteration:
