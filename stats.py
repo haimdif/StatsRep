@@ -10,6 +10,7 @@ from sets import ImmutableSet
 class GameDBReader:
 
     def __init__(self, name):
+        self.name = name
         self.tree = ET.parse(name)
         self.root = self.tree.getroot()
         self.team_to_side = {}
@@ -38,7 +39,9 @@ class GameDBReader:
                     if player.attrib['starter'] == '1':
                         self.team_to_starters[players.attrib['side']].add(player.attrib['name'])
             
-
+    def GetName(self):
+        return self.name
+    
     def InitPlayByPlayIter(self):
         self.iter = self.root.iterfind('.//film')
         
@@ -119,8 +122,12 @@ class GameDBReader:
     def GetPlayersByTeam(self,name):
         ret_list = []
         for player in self.GetPlayers():
-            if self.player_to_team[player] == self.team_to_side[name]:
-                ret_list.append(player)
+            try:            
+                if self.player_to_team[player] == self.team_to_side[name]:
+                    ret_list.append(player)
+            except KeyError:
+                continue
+                
         return ret_list
             
     def Get3PointersMadeByTeam(self, name):
@@ -162,6 +169,11 @@ class GameDBReader:
         for player_stats in self.root.findall('.//player'):
             if player_stats.attrib['name'] == name:
                 return int(player_stats.attrib['points'])
+
+    def GetValueByPlayer(self,name):
+        for player_stats in self.root.findall('.//player'):
+            if player_stats.attrib['name'] == name:
+                return int(player_stats.attrib['val'])
             
     def GetTimePlayedInSecondsByPlayer(self, name):
         for player_stats in self.root.findall('.//player'):
@@ -214,6 +226,8 @@ parser.add_argument('--dir_name', dest='dir_name', help='the directory containin
 
 parser.add_argument('--print_all_players_points_per_minute', action='store_true',dest='print_all_players_points_per_minute', default=False, help='print all players points per minute of a specified teams')
 
+parser.add_argument('--print_all_players_all_teams_value', action='store_true',dest='print_all_players_all_teams_value', default=False, help='print all players value per minute in all teams')
+
 parser.add_argument('--print_all_players_points_per_minute_all_teams', action='store_true',dest='print_all_players_points_per_minute_all_teams', default=False, help='print all teams points per minute in all teams')
 
 parser.add_argument('--print_points_per_players', action='store_true',dest='print_points_per_players', default=False, help='print points per five players')
@@ -250,6 +264,27 @@ if args.print_all_players_points_per_minute:
         for player in game_reader.GetPlayersByTeam(args.team_name):
             if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
                 print player + ' ' +  str(float(game_reader.GetPointsByPlayer(player)*60) / float(game_reader.GetTimePlayedInSecondsByPlayer(player)))
+
+if args.print_all_players_all_teams_value:
+    for team in teams_set:
+        cur_players_minutes = {}
+        cur_players_value = {}
+        for game_reader in files:
+            for player in game_reader.GetPlayersByTeam(team):
+                try:
+                    print player
+                except:
+                    print "ELADLALDA",game_reader.GetName()
+                cur_players_minutes[player] = cur_players_minutes.get(player, 0) +  game_reader.GetTimePlayedInSecondsByPlayer(player)
+                cur_players_value[player]  = cur_players_value.get(player, 0) + game_reader.GetValueByPlayer(player)
+        for player in cur_players_value.keys():
+            if cur_players_minutes[player]  == 0:
+                continue
+#                print str(cur_players_value[player]) + ',0.0,' + player
+            else:
+                continue
+#                print player
+                #print str(cur_players_value[player]) + ',' +  str(float(cur_players_value[player]*60)/float(cur_players_minutes[player])) + ',' + player
 
 
 if args.print_all_players_points_per_minute_all_teams:
