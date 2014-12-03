@@ -272,14 +272,17 @@ if args.print_all_players_all_teams_value:
         cur_players_value = defaultdict(list)
         for game_reader in files:
             for player in game_reader.GetPlayersByTeam(team):
+                try:
+                    print player
+                except:
+                    print "ELAD",game_reader.GetName()
                 cur_players_minutes[player] = cur_players_minutes.get(player, 0) +  game_reader.GetTimePlayedInSecondsByPlayer(player)
                 cur_players_value[player].append(game_reader.GetValueByPlayer(player))
         for player in cur_players_value.keys():
             if cur_players_minutes[player]  == 0:
                 print str(sum(cur_players_value[player])) + ',0.0,' + player
             else:
-                print cur_players_value[player], player
-#                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(sum(cur_players_value[player])/len(cur_players_value[player])) + "," + player
+                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(sum(cur_players_value[player])/len(cur_players_value[player])) + "," + player
 
 
 if args.print_all_players_points_per_minute_all_teams:
