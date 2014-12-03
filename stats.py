@@ -7,6 +7,7 @@ from os.path import isfile, join
 from sets import Set
 from sets import ImmutableSet
 from collections import defaultdict
+import math
 
 class GameDBReader:
 
@@ -189,6 +190,17 @@ class GameDBReader:
 def offensive_efficiency(three_p_made, two_p_made, assists_made, three_p_attempts, two_p_attempts, turnovers, off_rebounds):
     return float(three_p_made + two_p_made  + assists_made) / float(three_p_attempts + two_p_attempts + assists_made + turnovers - off_rebounds)
 
+def average(number_list):
+    return sum(number_list) * 1.0 / len(number_list)
+
+def variance(number_list):
+    avg = average(number_list)
+    return average(map(lambda x: (x - avg)**2, number_list))
+
+def std_dev(number_list):
+    return math.sqrt(variance(number_list))
+    
+
 def get_team_oe(files,team_name):
     summary = {}
     summary['3pm'] = 0
@@ -278,7 +290,7 @@ if args.print_all_players_all_teams_value:
             if cur_players_minutes[player]  == 0:
                 print str(sum(cur_players_value[player])) + ',0.0,' + player
             else:
-                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(max(cur_players_value[player]))  + "," + player
+                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(max(cur_players_value[player]))  + "," + str(min(cur_players_value[player])) + "," + str(std_dev(cur_players_value[player]))  + "," + player
 
 
 if args.print_all_players_points_per_minute_all_teams:
