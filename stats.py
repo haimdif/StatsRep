@@ -193,6 +193,12 @@ def offensive_efficiency(three_p_made, two_p_made, assists_made, three_p_attempt
 def average(number_list):
     return sum(number_list) * 1.0 / len(number_list)
 
+def average_remove_exceptions(number_list):
+    if len(number_list) > 2:
+        return (sum(number_list) - max(number_list) - min(number_list)) * 1.0 / (len(number_list) - 2)
+    else:
+        return 0
+
 def variance(number_list):
     avg = average(number_list)
     return average(map(lambda x: (x - avg)**2, number_list))
@@ -279,18 +285,20 @@ if args.print_all_players_points_per_minute:
                 print player + ' ' +  str(float(game_reader.GetPointsByPlayer(player)*60) / float(game_reader.GetTimePlayedInSecondsByPlayer(player)))
 
 if args.print_all_players_all_teams_value:
+    player_to_team = {}
     for team in teams_set:
         cur_players_minutes = {}
         cur_players_value = defaultdict(list)
         for game_reader in files:
             for player in game_reader.GetPlayersByTeam(team):
+                player_to_team[player] = team
                 cur_players_minutes[player] = cur_players_minutes.get(player, 0) +  game_reader.GetTimePlayedInSecondsByPlayer(player)
                 cur_players_value[player].append(game_reader.GetValueByPlayer(player))
         for player in cur_players_value.keys():
             if cur_players_minutes[player]  == 0:
-                print str(sum(cur_players_value[player])) + ',0.0,' + player
+                print str(sum(cur_players_value[player])) + ',0.0,0,0,0,0,0,' + team + "," + player
             else:
-                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(max(cur_players_value[player]))  + "," + str(min(cur_players_value[player])) + "," + str(std_dev(cur_players_value[player]))  + "," + player
+                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(max(cur_players_value[player]))  + "," + str(min(cur_players_value[player])) + "," + str(std_dev(cur_players_value[player])) + "," + str(average_remove_exceptions(cur_players_value[player]))  + "," + team + "," + player
 
 
 if args.print_all_players_points_per_minute_all_teams:
