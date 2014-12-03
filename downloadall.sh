@@ -1,7 +1,10 @@
-I=`ls -l | awk '{print $9}' | tail -n 1 | cut -c 5,6,7,8`
+I=1906
 let I=I+1 
 while [ $I -lt 2000 ] ; do
-    wget http://www.basket.co.il/misc/Stats-XML/isr-$I.xml? > /dev/null 2>&1
+    if [ ! -f isr-$I.xml ]; then
+        wget http://www.basket.co.il/misc/Stats-XML/isr-$I.xml? > /dev/null 2>&1
+        echo "isr-$I.xml downloaded"
+    fi
     let I=I+1 
 done
 
