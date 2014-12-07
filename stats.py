@@ -349,7 +349,7 @@ if args.print_points_per_players:
                     key_fivers = ImmutableSet(cur_fivers)
                     points_allowed_by_fivers[key_fivers] = points_allowed_by_fivers.get(key_fivers, 0) + game_reader.GetCurrentScored()
                     total = total + game_reader.GetCurrentScored()
-                    print str(key_fivers) + ',' + str(total)
+#                    print str(key_fivers) + ',' + str(total)
 
                     
             except StopIteration:
