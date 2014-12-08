@@ -184,8 +184,21 @@ class GameDBReader:
                 return pt.second + pt.minute*60
             
     def GetStarters(self,team_name):
-        return self.team_to_starters[ self.team_to_side[team_name] ] 
-    
+        return self.team_to_starters[ self.team_to_side[team_name] ]
+
+    def GetOpponent(self,team_name):
+        return_value = ""
+        if self.side_to_team['1'] == team_name:
+            return_value = self.side_to_team['0']
+        else:
+            return_value = self.side_to_team['1']
+        return return_value 
+
+
+def print_set(set):
+    list_from_set = list(set)
+    return ",".join(str(e) for e in sorted(list_from_set))
+
 
 def offensive_efficiency(three_p_made, two_p_made, assists_made, three_p_attempts, two_p_attempts, turnovers, off_rebounds):
     return float(three_p_made + two_p_made  + assists_made) / float(three_p_attempts + two_p_attempts + assists_made + turnovers - off_rebounds)
@@ -289,16 +302,18 @@ if args.print_all_players_all_teams_value:
     for team in teams_set:
         cur_players_minutes = {}
         cur_players_value = defaultdict(list)
+        cur_players_team_against = defaultdict(list)
         for game_reader in files:
             for player in game_reader.GetPlayersByTeam(team):
                 player_to_team[player] = team
                 cur_players_minutes[player] = cur_players_minutes.get(player, 0) +  game_reader.GetTimePlayedInSecondsByPlayer(player)
                 cur_players_value[player].append(game_reader.GetValueByPlayer(player))
+                cur_players_team_against[player].append(game_reader.GetOpponent(team))
         for player in cur_players_value.keys():
             if cur_players_minutes[player]  == 0:
-                print str(sum(cur_players_value[player])) + ',0.0,0,0,0,0,0,' + team + "," + player
+                print str(sum(cur_players_value[player])) + ',0.0,0,0,0,0,0,0,0' + team + "," + player
             else:
-                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(max(cur_players_value[player]))  + "," + str(min(cur_players_value[player])) + "," + str(std_dev(cur_players_value[player])) + "," + str(average_remove_exceptions(cur_players_value[player]))  + "," + team + "," + player
+                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(max(cur_players_value[player]))  + "," + cur_players_team_against[player][cur_players_value[player].index(max(cur_players_value[player]))]  + "," + str(min(cur_players_value[player])) + "," + cur_players_team_against[player][cur_players_value[player].index(min(cur_players_value[player]))]  + "," +str(std_dev(cur_players_value[player])) + "," + str(average_remove_exceptions(cur_players_value[player]))  + "," + team + "," + player
 
 
 if args.print_all_players_points_per_minute_all_teams:
@@ -349,7 +364,6 @@ if args.print_points_per_players:
                     key_fivers = ImmutableSet(cur_fivers)
                     points_allowed_by_fivers[key_fivers] = points_allowed_by_fivers.get(key_fivers, 0) + game_reader.GetCurrentScored()
                     total = total + game_reader.GetCurrentScored()
-#                    print str(key_fivers) + ',' + str(total)
 
                     
             except StopIteration:
@@ -360,7 +374,7 @@ if args.print_points_per_players:
             
     for fivers in seconds_played_by_fivers.keys():
         try:
-            print str(float(points_scored_by_fivers.get(fivers,0))*60/seconds_played_by_fivers[fivers]) + ',' + str(points_scored_by_fivers.get(fivers,0)) + ',' + str(seconds_played_by_fivers[fivers]) + ',' + str(points_allowed_by_fivers.get(fivers,0)) + ',' + str(float(points_scored_by_fivers.get(fivers,0) - points_allowed_by_fivers.get(fivers,0))*60/seconds_played_by_fivers[fivers]) + ',' + str(fivers)
+            print str(float(points_scored_by_fivers.get(fivers,0))*60/seconds_played_by_fivers[fivers]) + ',' + str(points_scored_by_fivers.get(fivers,0)) + ',' + str(seconds_played_by_fivers[fivers]) + ',' + str(points_allowed_by_fivers.get(fivers,0)) + ',' + str(float(points_scored_by_fivers.get(fivers,0) - points_allowed_by_fivers.get(fivers,0))*60/seconds_played_by_fivers[fivers]) + ',' + print_set(fivers)
         except ZeroDivisionError:
             continue
     
