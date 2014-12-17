@@ -305,13 +305,17 @@ if args.print_all_players_all_teams_value:
         cur_players_team_against = defaultdict(list)
         for game_reader in files:
             for player in game_reader.GetPlayersByTeam(team):
+                try:
+                    print player
+                except:
+                    print game_reader.GetName()
                 player_to_team[player] = team
                 cur_players_minutes[player] = cur_players_minutes.get(player, 0) +  game_reader.GetTimePlayedInSecondsByPlayer(player)
                 cur_players_value[player].append(game_reader.GetValueByPlayer(player))
                 cur_players_team_against[player].append(game_reader.GetOpponent(team))
         for player in cur_players_value.keys():
             if cur_players_minutes[player]  == 0:
-                print str(sum(cur_players_value[player])) + ',0.0,0,0,0,0,0,0,0' + team + "," + player
+                print str(sum(cur_players_value[player])) + ',0.0,0,0,0,0,0,0,0,0,0' + team + "," + player
             else:
                 print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(max(cur_players_value[player]))  + "," + cur_players_team_against[player][cur_players_value[player].index(max(cur_players_value[player]))]  + "," + str(min(cur_players_value[player])) + "," + cur_players_team_against[player][cur_players_value[player].index(min(cur_players_value[player]))]  + "," +str(std_dev(cur_players_value[player])) + "," + str(average_remove_exceptions(cur_players_value[player]))  + "," + team + "," + player
 
