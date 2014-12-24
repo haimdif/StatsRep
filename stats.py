@@ -291,6 +291,9 @@ parser.add_argument('--wins_by_shooting_percentage',action='store_true',dest='wi
 
 parser.add_argument('--home_court_advantage',action='store_true',dest='home_court_advantage', default=False, help='wins by shooting percentage')
 
+parser.add_argument('--average_rate_for_teams_by_game_result',action='store_true',dest='average_rate_for_teams_by_game_result', default=False, help='find average rate for winning team and losing team')
+
+
 args = parser.parse_args()
 
 files = []
@@ -465,5 +468,49 @@ if args.home_court_advantage:
             total_games_won_by_home_team = total_games_won_by_home_team + 1
             
     print float(total_games_won_by_home_team) / float(total_games)
+
+if args.average_rate_for_teams_by_game_result:
+    rate_for_winning_teams = []
+    rate_for_losing_teams = []
+
+    max_rate_for_winning_teams = []
+    max_rate_for_losing_teams = []
+    
+    for game_reader in files:
+        cur_team_win = []
+        cur_team_lose = []
+        
+        if game_reader.GetHomeTeamScore() > game_reader.GetAwayTeamScore():
+            for player in game_reader.GetPlayersByTeam(game_reader.GetHomeTeam()):
+                if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
+                    rate_for_winning_teams.append(game_reader.GetValueByPlayer(player))
+                    cur_team_win.append(game_reader.GetValueByPlayer(player))
+            for player in game_reader.GetPlayersByTeam(game_reader.GetAwayTeam()):
+                if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
+                    rate_for_losing_teams.append(game_reader.GetValueByPlayer(player))
+                    cur_team_lose.append(game_reader.GetValueByPlayer(player))
+        else:
+            for player in game_reader.GetPlayersByTeam(game_reader.GetHomeTeam()):
+                if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
+                    rate_for_losing_teams.append(game_reader.GetValueByPlayer(player))
+                    cur_team_lose.append(game_reader.GetValueByPlayer(player))
+                    
+            for player in game_reader.GetPlayersByTeam(game_reader.GetAwayTeam()):
+                if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
+                    rate_for_winning_teams.append(game_reader.GetValueByPlayer(player))
+                    cur_team_win.append(game_reader.GetValueByPlayer(player))
+        max_rate_for_winning_teams.append(max(cur_team_win))
+        max_rate_for_losing_teams.append(max(cur_team_lose))
+
+
+
+    print 'winning,' + str(average(rate_for_winning_teams)) + ',max,' + str(max(rate_for_winning_teams))
+    print 'losing,' + str(average(rate_for_losing_teams)) + ',max,' + str(max(rate_for_losing_teams))
+
+    print 'average max winning,' + str(average(max_rate_for_winning_teams))
+    print 'average max losing,' + str(average(max_rate_for_losing_teams))
+            
+
+    
             
     
