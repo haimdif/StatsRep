@@ -289,6 +289,8 @@ parser.add_argument('--wins_by_point_difference',action='store_true',dest='wins_
 
 parser.add_argument('--wins_by_shooting_percentage',action='store_true',dest='wins_by_shooting_percentage', default=False, help='wins by shooting percentage')
 
+parser.add_argument('--home_court_advantage',action='store_true',dest='home_court_advantage', default=False, help='wins by shooting percentage')
+
 args = parser.parse_args()
 
 files = []
@@ -454,5 +456,14 @@ if args.wins_by_shooting_percentage:
 
                                                              
 
+if args.home_court_advantage:
+    total_games = 0
+    total_games_won_by_home_team = 0
+    for game_reader in files:
+        total_games = total_games + 1 
+        if game_reader.GetHomeTeamScore() > game_reader.GetAwayTeamScore():
+            total_games_won_by_home_team = total_games_won_by_home_team + 1
+            
+    print float(total_games_won_by_home_team) / float(total_games)
             
     
