@@ -192,8 +192,29 @@ class GameDBReader:
             return_value = self.side_to_team['0']
         else:
             return_value = self.side_to_team['1']
-        return return_value 
+        return return_value
 
+    def GetHomeTeam(self):
+        for team in self.root.findall('.//homename'):
+            return team.text
+
+    def GetAwayTeam(self):
+        for team in self.root.findall('.//awayname'):
+            return team.text
+
+    def GetHomeTeamScore(self):
+        for team in self.root.findall('.//homescore'):
+            return team.text
+
+    def GetAwayTeamScore(self):
+        for team in self.root.findall('.//awayscore'):
+            return team.text
+
+
+def team_scoring_percentage(made, attempted):
+    if attempted == 0:
+        return float(0)
+    return float(made)/float(attempted)
 
 def print_set(set):
     list_from_set = list(set)
@@ -263,6 +284,10 @@ parser.add_argument('--print_all_players_all_teams_value', action='store_true',d
 parser.add_argument('--print_all_players_points_per_minute_all_teams', action='store_true',dest='print_all_players_points_per_minute_all_teams', default=False, help='print all teams points per minute in all teams')
 
 parser.add_argument('--print_points_per_players', action='store_true',dest='print_points_per_players', default=False, help='print points per five players')
+
+parser.add_argument('--wins_by_point_difference',action='store_true',dest='wins_by_point_difference', default=False, help='wins by point difference')
+
+parser.add_argument('--wins_by_shooting_percentage',action='store_true',dest='wins_by_shooting_percentage', default=False, help='wins by shooting percentage')
 
 args = parser.parse_args()
 
@@ -378,7 +403,56 @@ if args.print_points_per_players:
         except ZeroDivisionError:
             continue
     
-    
+if args.wins_by_point_difference:
+    team_to_points_margin = defaultdict(int)
+    total_number_of_games_of_viable_prediction = 0
+    total_number_of_correct_predictions = 0
+    train_set = 0 
+    for game_reader in files:
+        if train_set > 100:
+            if team_to_points_margin[game_reader.GetHomeTeam()] != team_to_points_margin[game_reader.GetAwayTeam()]:
+                total_number_of_games_of_viable_prediction = total_number_of_games_of_viable_prediction + 1
+                if team_to_points_margin[game_reader.GetHomeTeam()] > team_to_points_margin[game_reader.GetAwayTeam()]:
+                    if game_reader.GetHomeTeamScore() > game_reader.GetAwayTeamScore():
+                        total_number_of_correct_predictions = total_number_of_correct_predictions + 1
+            
+                if team_to_points_margin[game_reader.GetAwayTeam()] > team_to_points_margin[game_reader.GetHomeTeam()]:
+                    if game_reader.GetAwayTeamScore() > game_reader.GetHomeTeamScore():
+                        total_number_of_correct_predictions = total_number_of_correct_predictions + 1
+        train_set = train_set + 1 
+        team_to_points_margin[game_reader.GetHomeTeam()] = team_to_points_margin[game_reader.GetHomeTeam()] + int(game_reader.GetHomeTeamScore()) - int(game_reader.GetAwayTeamScore())
+        team_to_points_margin[game_reader.GetAwayTeam()] = team_to_points_margin[game_reader.GetAwayTeam()] + int(game_reader.GetAwayTeamScore()) - int(game_reader.GetHomeTeamScore())
 
- 
-     
+    print float(total_number_of_correct_predictions) / float(total_number_of_games_of_viable_prediction)
+          
+
+if args.wins_by_shooting_percentage:
+    team_field_goals_attempted = defaultdict(int)
+    team_field_goals_made = defaultdict(int)
+    total_number_of_games_of_viable_prediction = 0
+    total_number_of_correct_predictions = 0
+    train_set = 0 
+    for game_reader in files:
+        if train_set > 70:
+            if team_scoring_percentage(team_field_goals_made[game_reader.GetHomeTeam()],team_field_goals_attempted[game_reader.GetHomeTeam()]) != team_scoring_percentage(team_field_goals_made[game_reader.GetAwayTeam()],team_field_goals_attempted[game_reader.GetAwayTeam()]):
+                total_number_of_games_of_viable_prediction = total_number_of_games_of_viable_prediction + 1
+                if team_scoring_percentage(team_field_goals_made[game_reader.GetHomeTeam()],team_field_goals_attempted[game_reader.GetHomeTeam()]) > team_scoring_percentage(team_field_goals_made[game_reader.GetAwayTeam()],team_field_goals_attempted[game_reader.GetAwayTeam()]):
+                    total_number_of_correct_predictions = total_number_of_correct_predictions + 1
+                    
+                if team_scoring_percentage(team_field_goals_made[game_reader.GetAwayTeam()],team_field_goals_attempted[game_reader.GetAwayTeam()]) > team_scoring_percentage(team_field_goals_made[game_reader.GetHomeTeam()],team_field_goals_attempted[game_reader.GetHomeTeam()]):
+                    if game_reader.GetAwayTeamScore() > game_reader.GetHomeTeamScore():
+                        total_number_of_correct_predictions = total_number_of_correct_predictions + 1
+
+        team_field_goals_attempted[game_reader.GetHomeTeam()] = team_field_goals_attempted[game_reader.GetHomeTeam()] + game_reader.Get3PointersAttemptsByTeam(game_reader.GetHomeTeam()) + game_reader.Get2PointersAttemptsByTeam(game_reader.GetHomeTeam())
+        team_field_goals_made[game_reader.GetHomeTeam()] = team_field_goals_attempted[game_reader.GetHomeTeam()] + game_reader.Get3PointersMadeByTeam(game_reader.GetHomeTeam()) + game_reader.Get2PointersMadeByTeam(game_reader.GetHomeTeam())
+        
+
+        team_field_goals_attempted[game_reader.GetAwayTeam()] = team_field_goals_attempted[game_reader.GetAwayTeam()] + game_reader.Get3PointersAttemptsByTeam(game_reader.GetAwayTeam()) + game_reader.Get2PointersAttemptsByTeam(game_reader.GetAwayTeam())
+        team_field_goals_made[game_reader.GetAwayTeam()] = team_field_goals_attempted[game_reader.GetAwayTeam()] + game_reader.Get3PointersMadeByTeam(game_reader.GetAwayTeam()) + game_reader.Get2PointersMadeByTeam(game_reader.GetAwayTeam())
+        train_set = train_set + 1
+    print float(total_number_of_correct_predictions) / float(total_number_of_games_of_viable_prediction)
+
+                                                             
+
+            
+    
