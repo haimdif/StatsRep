@@ -293,6 +293,11 @@ parser.add_argument('--home_court_advantage',action='store_true',dest='home_cour
 
 parser.add_argument('--average_rate_for_teams_by_game_result',action='store_true',dest='average_rate_for_teams_by_game_result', default=False, help='find average rate for winning team and losing team')
 
+parser.add_argument('--average_rate_all_players',action='store_true',dest='average_rate_all_players', default=False, help='average rate')
+
+parser.add_argument('--average_rate_against_team',action='store_true',dest='average_rate_against_team', default=False, help='average rate against a team')
+
+parser.add_argument('--average_rate_against_team_all_teams',action='store_true',dest='average_rate_against_team_all_teams', default=False, help='average rate against a team for all teams')
 
 args = parser.parse_args()
 
@@ -513,4 +518,49 @@ if args.average_rate_for_teams_by_game_result:
 
     
             
+if args.average_rate_all_players:
+    players_rate = []
+    for game_reader in files:
+        for player in game_reader.GetPlayersByTeam(game_reader.GetHomeTeam()):
+            if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
+                players_rate.append(game_reader.GetValueByPlayer(player))
+            
+        for player in game_reader.GetPlayersByTeam(game_reader.GetAwayTeam()):
+            if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
+                players_rate.append(game_reader.GetValueByPlayer(player))
+
+    print 'average on all playing players,' + str(average(players_rate))
+
+if args.average_rate_against_team:
+    players_rate = []
+    for game_reader in files:
+        team = 'None'
+        if args.team_name == game_reader.GetHomeTeam():
+            team = game_reader.GetAwayTeam()
+        if args.team_name == game_reader.GetAwayTeam():
+            team = game_reader.GetHomeTeam()
+
+        if team != 'None':
+            for player in game_reader.GetPlayersByTeam(team):
+                if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
+                    print str (game_reader.GetValueByPlayer(player)) + ',' + player
+                    players_rate.append(game_reader.GetValueByPlayer(player))
     
+    print 'average on players against ' + args.team_name + ',' + str(average(players_rate))
+
+if args.average_rate_against_team_all_teams:
+    for cur_team in teams_set:
+        players_rate = []
+        for game_reader in files:
+            team = 'None'
+            if cur_team == game_reader.GetHomeTeam():
+                team = game_reader.GetAwayTeam()
+            if cur_team == game_reader.GetAwayTeam():
+                team = game_reader.GetHomeTeam()
+
+            if team != 'None':
+                for player in game_reader.GetPlayersByTeam(team):
+                    if game_reader.GetTimePlayedInSecondsByPlayer(player) > 0:
+                        players_rate.append(game_reader.GetValueByPlayer(player))
+    
+        print str(average(players_rate)) + ',' + cur_team
