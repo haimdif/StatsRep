@@ -419,7 +419,7 @@ if args.wins_by_point_difference:
     total_number_of_correct_predictions = 0
     train_set = 0 
     for game_reader in files:
-        if train_set > 100:
+        if train_set > 50:
             if team_to_points_margin[game_reader.GetHomeTeam()] != team_to_points_margin[game_reader.GetAwayTeam()]:
                 total_number_of_games_of_viable_prediction = total_number_of_games_of_viable_prediction + 1
                 if team_to_points_margin[game_reader.GetHomeTeam()] > team_to_points_margin[game_reader.GetAwayTeam()]:
@@ -433,7 +433,7 @@ if args.wins_by_point_difference:
         team_to_points_margin[game_reader.GetHomeTeam()] = team_to_points_margin[game_reader.GetHomeTeam()] + int(game_reader.GetHomeTeamScore()) - int(game_reader.GetAwayTeamScore())
         team_to_points_margin[game_reader.GetAwayTeam()] = team_to_points_margin[game_reader.GetAwayTeam()] + int(game_reader.GetAwayTeamScore()) - int(game_reader.GetHomeTeamScore())
 
-    print float(total_number_of_correct_predictions) / float(total_number_of_games_of_viable_prediction)
+    print float(total_number_of_correct_predictions) / float(total_number_of_games_of_viable_prediction), total_number_of_games_of_viable_prediction
           
 
 if args.wins_by_shooting_percentage:
@@ -443,7 +443,7 @@ if args.wins_by_shooting_percentage:
     total_number_of_correct_predictions = 0
     train_set = 0 
     for game_reader in files:
-        if train_set > 70:
+        if train_set > 50:
             if team_scoring_percentage(team_field_goals_made[game_reader.GetHomeTeam()],team_field_goals_attempted[game_reader.GetHomeTeam()]) != team_scoring_percentage(team_field_goals_made[game_reader.GetAwayTeam()],team_field_goals_attempted[game_reader.GetAwayTeam()]):
                 total_number_of_games_of_viable_prediction = total_number_of_games_of_viable_prediction + 1
                 if team_scoring_percentage(team_field_goals_made[game_reader.GetHomeTeam()],team_field_goals_attempted[game_reader.GetHomeTeam()]) > team_scoring_percentage(team_field_goals_made[game_reader.GetAwayTeam()],team_field_goals_attempted[game_reader.GetAwayTeam()]):
@@ -460,7 +460,7 @@ if args.wins_by_shooting_percentage:
         team_field_goals_attempted[game_reader.GetAwayTeam()] = team_field_goals_attempted[game_reader.GetAwayTeam()] + game_reader.Get3PointersAttemptsByTeam(game_reader.GetAwayTeam()) + game_reader.Get2PointersAttemptsByTeam(game_reader.GetAwayTeam())
         team_field_goals_made[game_reader.GetAwayTeam()] = team_field_goals_attempted[game_reader.GetAwayTeam()] + game_reader.Get3PointersMadeByTeam(game_reader.GetAwayTeam()) + game_reader.Get2PointersMadeByTeam(game_reader.GetAwayTeam())
         train_set = train_set + 1
-    print float(total_number_of_correct_predictions) / float(total_number_of_games_of_viable_prediction)
+    print float(total_number_of_correct_predictions) / float(total_number_of_games_of_viable_prediction),total_number_of_games_of_viable_prediction 
 
                                                              
 
