@@ -81,6 +81,21 @@ class GameDBReader:
             return False
         except KeyError:
             return False
+
+    def IsCurrentFieldGoal(self):
+        return_value = False
+        try:
+            if (self.cur_elem.attrib['fccode'] == '1000'):
+                if self.cur_elem.attrib['shottype'] != '4':
+                    return_value = True
+        except KeyError:
+            return return_value
+        return return_value
+
+    def GetDistanceFromBasket(self):
+        x = float(self.cur_elem.attrib['x'])
+        y = float(self.cur_elem.attrib['y'])
+        
         
     def IsCurrentAllowedScore(self,team_name):
         try:
@@ -564,3 +579,18 @@ if args.average_rate_against_team_all_teams:
                         players_rate.append(game_reader.GetValueByPlayer(player))
     
         print str(average(players_rate)) + ',' + cur_team
+
+
+if args.get_shooting_percentage_by_distance:
+    for game_reader in files:
+        game_reader.InitPlayByPlayIter()
+        while True:
+            try:
+                game_reader.GetNext()
+                if game_reader.IsCurrentFieldGoal():
+                    distance_from_basket = game_reader.GetDistanceFromBasket()
+                
+            except StopIteration:
+                break
+
+
