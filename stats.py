@@ -240,6 +240,8 @@ def offensive_efficiency(three_p_made, two_p_made, assists_made, three_p_attempt
     return float(three_p_made + two_p_made  + assists_made) / float(three_p_attempts + two_p_attempts + assists_made + turnovers - off_rebounds)
 
 def average(number_list):
+    if len(number_list) == 0:
+        return 0 
     return sum(number_list) * 1.0 / len(number_list)
 
 def average_remove_exceptions(number_list):
@@ -352,18 +354,24 @@ if args.print_all_players_all_teams_value:
     for team in teams_set:
         cur_players_minutes = {}
         cur_players_value = defaultdict(list)
+        cur_players_value_home = defaultdict(list)
+        cur_players_value_away = defaultdict(list)
         cur_players_team_against = defaultdict(list)
         for game_reader in files:
             for player in game_reader.GetPlayersByTeam(team):
                 player_to_team[player] = team
+                if game_reader.GetAwayTeam() == team:
+                    cur_players_value_away[player].append(game_reader.GetValueByPlayer(player))
+                else:
+                    cur_players_value_home[player].append(game_reader.GetValueByPlayer(player))
                 cur_players_minutes[player] = cur_players_minutes.get(player, 0) +  game_reader.GetTimePlayedInSecondsByPlayer(player)
                 cur_players_value[player].append(game_reader.GetValueByPlayer(player))
                 cur_players_team_against[player].append(game_reader.GetOpponent(team))
         for player in cur_players_value.keys():
             if cur_players_minutes[player]  == 0:
-                print str(sum(cur_players_value[player])) + ',0.0,0,0,0,0,0,0,0,' + team + "," + player
+                print str(sum(cur_players_value[player])) + ',0.0,0,0,0,0,0,0,0,0,0,' + team + "," + player
             else:
-                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(max(cur_players_value[player]))  + "," + cur_players_team_against[player][cur_players_value[player].index(max(cur_players_value[player]))]  + "," + str(min(cur_players_value[player])) + "," + cur_players_team_against[player][cur_players_value[player].index(min(cur_players_value[player]))]  + "," +str(std_dev(cur_players_value[player])) + "," + str(average_remove_exceptions(cur_players_value[player]))  + "," + team + "," + player
+                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(average(cur_players_value_home[player])) + "," + str(average(cur_players_value_away[player])) + "," + str(max(cur_players_value[player]))  + "," + cur_players_team_against[player][cur_players_value[player].index(max(cur_players_value[player]))]  + "," + str(min(cur_players_value[player])) + "," + cur_players_team_against[player][cur_players_value[player].index(min(cur_players_value[player]))]  + "," +str(std_dev(cur_players_value[player])) + "," + str(average_remove_exceptions(cur_players_value[player]))  + "," + team + "," + player
 
 
 if args.print_all_players_points_per_minute_all_teams:
@@ -581,16 +589,16 @@ if args.average_rate_against_team_all_teams:
         print str(average(players_rate)) + ',' + cur_team
 
 
-if args.get_shooting_percentage_by_distance:
-    for game_reader in files:
-        game_reader.InitPlayByPlayIter()
-        while True:
-            try:
-                game_reader.GetNext()
-                if game_reader.IsCurrentFieldGoal():
-                    distance_from_basket = game_reader.GetDistanceFromBasket()
+# if args.get_shooting_percentage_by_distance:
+#     for game_reader in files:
+#         game_reader.InitPlayByPlayIter()
+#         while True:
+#             try:
+#                 game_reader.GetNext()
+#                 if game_reader.IsCurrentFieldGoal():
+#                     distance_from_basket = game_reader.GetDistanceFromBasket()
                 
-            except StopIteration:
-                break
+#             except StopIteration:
+#                 break
 
 
