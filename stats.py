@@ -316,6 +316,9 @@ parser.add_argument('--average_rate_against_team',action='store_true',dest='aver
 
 parser.add_argument('--average_rate_against_team_all_teams',action='store_true',dest='average_rate_against_team_all_teams', default=False, help='average rate against a team for all teams')
 
+
+parser.add_argument('--home_court_advantage_per_team',action='store_true',dest='home_court_advantage_per_team', default=False, help='How homey is each team')
+
 args = parser.parse_args()
 
 files = []
@@ -369,9 +372,10 @@ if args.print_all_players_all_teams_value:
                 cur_players_team_against[player].append(game_reader.GetOpponent(team))
         for player in cur_players_value.keys():
             if cur_players_minutes[player]  == 0:
-                print str(sum(cur_players_value[player])) + ',0.0,0,0,0,0,0,0,0,0,0,' + team + "," + player
+                print str(sum(cur_players_value[player])) + ',0.0,0,0,0,0,0,0,0,0,0,0,' + team + "," + player
             else:
-                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(average(cur_players_value_home[player])) + "," + str(average(cur_players_value_away[player])) + "," + str(max(cur_players_value[player]))  + "," + cur_players_team_against[player][cur_players_value[player].index(max(cur_players_value[player]))]  + "," + str(min(cur_players_value[player])) + "," + cur_players_team_against[player][cur_players_value[player].index(min(cur_players_value[player]))]  + "," +str(std_dev(cur_players_value[player])) + "," + str(average_remove_exceptions(cur_players_value[player]))  + "," + team + "," + player
+                sorted_current = sorted(cur_players_value[player])
+                print str(sum(cur_players_value[player])) + ',' +  str(float(sum(cur_players_value[player])*60)/float(cur_players_minutes[player])) + ',' + str(float(sum(cur_players_value[player]))/float(len(cur_players_value[player]))) + "," + str(average(cur_players_value_home[player])) + "," + str(average(cur_players_value_away[player])) + "," + str(max(cur_players_value[player]))  + "," + cur_players_team_against[player][cur_players_value[player].index(max(cur_players_value[player]))]  + "," + str(min(cur_players_value[player])) + "," + cur_players_team_against[player][cur_players_value[player].index(min(cur_players_value[player]))]  + "," +str(std_dev(cur_players_value[player])) + "," + str(average_remove_exceptions(cur_players_value[player])) + "," + str(sorted_current[len(sorted_current)/2])  + "," + team + "," + player
 
 
 if args.print_all_players_points_per_minute_all_teams:
@@ -587,6 +591,27 @@ if args.average_rate_against_team_all_teams:
                         players_rate.append(game_reader.GetValueByPlayer(player))
     
         print str(average(players_rate)) + ',' + cur_team
+
+if args.home_court_advantage_per_team:
+    for cur_team in teams_set:
+        total_games = 0
+        total_games_won_by_home_team = 0
+        total_games_away = 0
+        total_games_won_by_away_team = 0
+
+        for game_reader in files:
+            if game_reader.GetHomeTeam() == cur_team :
+                total_games = total_games + 1
+                if game_reader.GetHomeTeamScore() > game_reader.GetAwayTeamScore():
+                    total_games_won_by_home_team = total_games_won_by_home_team + 1
+            if game_reader.GetAwayTeam() == cur_team :
+                total_games_away = total_games_away + 1
+                if game_reader.GetHomeTeamScore() < game_reader.GetAwayTeamScore():
+                    total_games_won_by_away_team = total_games_won_by_away_team + 1
+
+        print total_games_won_by_home_team, total_games, total_games_won_by_away_team , total_games_away
+        print str(float(total_games_won_by_home_team) * 100 / float(total_games)) + ',' + str(float(total_games_won_by_away_team) * 100 / float(total_games_away))  + "," + cur_team
+    
 
 
 # if args.get_shooting_percentage_by_distance:
