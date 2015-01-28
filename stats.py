@@ -230,11 +230,11 @@ class GameDBReader:
 
     def GetHomeTeamScore(self):
         for team in self.root.findall('.//homescore'):
-            return team.text
+            return int(team.text)
 
     def GetAwayTeamScore(self):
         for team in self.root.findall('.//awayscore'):
-            return team.text
+            return int(team.text)
 
 
 def team_scoring_percentage(made, attempted):
@@ -337,7 +337,10 @@ files = []
 for f in listdir(args.dir_name):
     if isfile(join(args.dir_name,f)):
         if f.endswith('.xml'):
-           files.append(GameDBReader(f))
+            try:
+                files.append(GameDBReader(f))
+            except:
+                print f 
 
 teams_set = Set()
 for game_reader in files:
@@ -620,29 +623,28 @@ if args.home_court_advantage_per_team:
                 if game_reader.GetHomeTeamScore() < game_reader.GetAwayTeamScore():
                     total_games_won_by_away_team = total_games_won_by_away_team + 1
 
-        print total_games_won_by_home_team, total_games, total_games_won_by_away_team , total_games_away
         print str(float(total_games_won_by_home_team) * 100 / float(total_games)) + ',' + str(float(total_games_won_by_away_team) * 100 / float(total_games_away))  + "," + cur_team
     
 
 
-if args.get_shooting_percentage_by_distance:
-     attempts_per_distance = defaultdict(int)
-     made_per_distance = defaultdict(int)
-     for game_reader in files:
-         game_reader.InitPlayByPlayIter()
-         while True:
-             try:
-                 game_reader.GetNext()
-                 if game_reader.IsCurrentFieldGoalAttempt():
-                     distance_from_basket = game_reader.GetDistanceFromBasket()
-                     rounded_distance = round(distance_from_basket, 0)
-                     attempts_per_distance[rounded_distance] = attempts_per_distance[rounded_distance] + 1
-                     if game_reader.IsCurrentFieldGoalMade():
-                         made_per_distance[rounded_distance] = made_per_distance[rounded_distance] + 1             
+# if args.get_shooting_percentage_by_distance:
+#      attempts_per_distance = defaultdict(int)
+#      made_per_distance = defaultdict(int)
+#      for game_reader in files:
+#          game_reader.InitPlayByPlayIter()
+#          while True:
+#              try:
+#                  game_reader.GetNext()
+#                  if game_reader.IsCurrentFieldGoalAttempt():
+#                      distance_from_basket = game_reader.GetDistanceFromBasket()
+#                      rounded_distance = round(distance_from_basket, 0)
+#                      attempts_per_distance[rounded_distance] = attempts_per_distance[rounded_distance] + 1
+#                      if game_reader.IsCurrentFieldGoalMade():
+#                          made_per_distance[rounded_distance] = made_per_distance[rounded_distance] + 1             
 
-             except StopIteration:
-                 break
-     print attempts_per_distance 
-     print made_per_distance
+#              except StopIteration:
+#                  break
+#      print attempts_per_distance 
+#      print made_per_distance
 
 
