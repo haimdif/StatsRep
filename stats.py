@@ -82,7 +82,17 @@ class GameDBReader:
         except KeyError:
             return False
 
-    def IsCurrentFieldGoal(self):
+    def IsCurrentFieldGoalAttempt(self):
+        return_value = False
+        try:
+            if (self.cur_elem.attrib['fccode'] == '1000') or (self.cur_elem.attrib['fccode'] == '1001'):
+                if self.cur_elem.attrib['shottype'] != '4':
+                    return_value = True
+        except KeyError:
+            return return_value
+        return return_value
+
+    def IsCurrentFieldGoalMade(self):
         return_value = False
         try:
             if (self.cur_elem.attrib['fccode'] == '1000'):
@@ -95,6 +105,7 @@ class GameDBReader:
     def GetDistanceFromBasket(self):
         x = float(self.cur_elem.attrib['x'])
         y = float(self.cur_elem.attrib['y'])
+        
         
         
     def IsCurrentAllowedScore(self,team_name):
@@ -614,16 +625,24 @@ if args.home_court_advantage_per_team:
     
 
 
-# if args.get_shooting_percentage_by_distance:
-#     for game_reader in files:
-#         game_reader.InitPlayByPlayIter()
-#         while True:
-#             try:
-#                 game_reader.GetNext()
-#                 if game_reader.IsCurrentFieldGoal():
-#                     distance_from_basket = game_reader.GetDistanceFromBasket()
-                
-#             except StopIteration:
-#                 break
+if args.get_shooting_percentage_by_distance:
+     attempts_per_distance = defaultdict(int)
+     made_per_distance = defaultdict(int)
+     for game_reader in files:
+         game_reader.InitPlayByPlayIter()
+         while True:
+             try:
+                 game_reader.GetNext()
+                 if game_reader.IsCurrentFieldGoalAttempt():
+                     distance_from_basket = game_reader.GetDistanceFromBasket()
+                     rounded_distance = round(distance_from_basket, 0)
+                     attempts_per_distance[rounded_distance] = attempts_per_distance[rounded_distance] + 1
+                     if game_reader.IsCurrentFieldGoalMade():
+                         made_per_distance[rounded_distance] = made_per_distance[rounded_distance] + 1             
+
+             except StopIteration:
+                 break
+     print attempts_per_distance 
+     print made_per_distance
 
 
