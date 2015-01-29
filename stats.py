@@ -193,6 +193,11 @@ class GameDBReader:
             if self.side_to_team[team_stats.attrib['side']]  == name:
                 return int(team_stats.attrib['orb'])
 
+    def GetDefensiveReboundsByTeam(self, name): 
+        for team_stats in self.root.findall('.//ts'):
+            if self.side_to_team[team_stats.attrib['side']]  == name:
+                return int(team_stats.attrib['trb'])
+
     def GetPointsByPlayer(self, name):
         for player_stats in self.root.findall('.//player'):
             if player_stats.attrib['name'] == name:
@@ -327,8 +332,11 @@ parser.add_argument('--average_rate_against_team',action='store_true',dest='aver
 
 parser.add_argument('--average_rate_against_team_all_teams',action='store_true',dest='average_rate_against_team_all_teams', default=False, help='average rate against a team for all teams')
 
-
 parser.add_argument('--home_court_advantage_per_team',action='store_true',dest='home_court_advantage_per_team', default=False, help='How homey is each team')
+
+parser.add_argument('--rebounds_against',action='store_true',dest='rebounds_against', default=False, help='How many defensive rebounds against a team')
+
+parser.add_argument('--two_pointers_made_against',action='store_true',dest='two_pointers_made_against', default=False, help='How many 2 pointers were made against a team')
 
 args = parser.parse_args()
 
@@ -625,6 +633,41 @@ if args.home_court_advantage_per_team:
 
         print str(float(total_games_won_by_home_team) * 100 / float(total_games)) + ',' + str(float(total_games_won_by_away_team) * 100 / float(total_games_away))  + "," + cur_team
     
+if args.rebounds_against:
+     for cur_team in teams_set:
+          rebounds = []
+          
+          for game_reader in files:
+               team = "None"
+               if game_reader.GetHomeTeam() == cur_team:
+                    team = game_reader.GetAwayTeam()
+               if game_reader.GetAwayTeam() == cur_team:
+                    team = game_reader.GetHomeTeam()
+
+               if team == "None":
+                    continue
+               rebounds.append(game_reader.GetDefensiveReboundsByTeam(team))
+
+          print str(average(rebounds)) + ',' + cur_team
+
+if args.two_pointers_made_against:
+     for cur_team in teams_set:
+          list = []
+          
+          for game_reader in files:
+               team = "None"
+               if game_reader.GetHomeTeam() == cur_team:
+                    team = game_reader.GetAwayTeam()
+               if game_reader.GetAwayTeam() == cur_team:
+                    team = game_reader.GetHomeTeam()
+
+               if team == "None":
+                    continue
+               list.append(game_reader.Get2PointersMadeByTeam(team))
+
+          print str(average(list)) + ',' + cur_team
+          
+               
 
 
 # if args.get_shooting_percentage_by_distance:
