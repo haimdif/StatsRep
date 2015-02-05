@@ -162,6 +162,16 @@ class GameDBReader:
         for team_stats in self.root.findall('.//ts'):
             if self.side_to_team[team_stats.attrib['side']]  == name:
                 return int(team_stats.attrib['p3m'])
+
+    def GetLayupByTeam(self, name): 
+        for team_stats in self.root.findall('.//ts'):
+            if self.side_to_team[team_stats.attrib['side']]  == name:
+                return int(team_stats.attrib['layupa'])     
+
+    def GetDunksByTeam(self, name): 
+        for team_stats in self.root.findall('.//ts'):
+            if self.side_to_team[team_stats.attrib['side']]  == name:
+                return int(team_stats.attrib['dunka'])     
                 
     def Get2PointersMadeByTeam(self, name): 
         for team_stats in self.root.findall('.//ts'):
@@ -177,11 +187,18 @@ class GameDBReader:
         for team_stats in self.root.findall('.//ts'):
             if self.side_to_team[team_stats.attrib['side']]  == name:
                 return int(team_stats.attrib['p3a'])
-                
+
+               
     def Get2PointersAttemptsByTeam(self, name): 
         for team_stats in self.root.findall('.//ts'):
             if self.side_to_team[team_stats.attrib['side']]  == name:
                 return int(team_stats.attrib['p2a'])
+
+    def Get1PointersAttemptsByTeam(self, name): 
+        for team_stats in self.root.findall('.//ts'):
+            if self.side_to_team[team_stats.attrib['side']]  == name:
+                return int(team_stats.attrib['fta'])
+
                 
     def GetTurnoversByTeam(self, name): 
         for team_stats in self.root.findall('.//ts'):
@@ -240,6 +257,41 @@ class GameDBReader:
     def GetAwayTeamScore(self):
         for team in self.root.findall('.//awayscore'):
             return int(team.text)
+
+centers_set = Set()
+centers_set.add('SMITH Craig')
+centers_set.add('GATES Yancy')
+centers_set.add('ROSENFELT Isaac')
+centers_set.add('OFOEGBU Ike')
+centers_set.add('WILLIAMSON John')
+centers_set.add('CARMICHAEL Jackie')
+centers_set.add('KELLY Curtis')
+centers_set.add('SMITH Jeremis')
+centers_set.add('ROTHBART Robert')
+centers_set.add('COHEN Jake')
+centers_set.add('WRIGHT Julian')
+centers_set.add('UTER Adrian')
+centers_set.add('EVANS Sean')
+
+
+guards_set = Set()
+guards_set.add('WRIGHT Bracey') 
+guards_set.add('WYATT Khalif') 
+guards_set.add('TAYLOR Jordan') 
+guards_set.add('SCOTT Durand') 
+guards_set.add('HALPERIN Yotam') 
+guards_set.add('SELBY Josh') 
+guards_set.add('LYONS Mark') 
+guards_set.add('PARGO Jeremy') 
+guards_set.add('NAIMI Yuval') 
+guards_set.add('OBANNON Larry') 
+guards_set.add('LANDENBERGUE Sylvan') 
+guards_set.add('OHAYON Yogev') 
+guards_set.add('NISSIM Afik') 
+guards_set.add('YOUNG Alex') 
+guards_set.add('YIVZORI Dagan') 
+guards_set.add('HAYNES Marquez') 
+guards_set.add('LIMONAD Raviv') 
 
 
 def team_scoring_percentage(made, attempted):
@@ -339,6 +391,16 @@ parser.add_argument('--rebounds_against',action='store_true',dest='rebounds_agai
 parser.add_argument('--offensive_against',action='store_true',dest='offensive_against', default=False, help='How many offensive rebounds against a team')
 
 parser.add_argument('--two_pointers_made_against',action='store_true',dest='two_pointers_made_against', default=False, help='How many 2 pointers were made against a team')
+
+parser.add_argument('--average_possesions_per_game',action='store_true',dest='average_possesions_per_game', default=False, help='How many possesions of average per team')
+
+parser.add_argument('--defensive_offensive_rating_per_team',action='store_true',dest='defensive_offensive_rating_per_team', default=False, help='defensive and offensive rating per team')
+
+parser.add_argument('--layup_and_dunks_per_team',action='store_true',dest='layup_and_dunks_per_team', default=False, help='layups and dunks attempted against all teams')
+
+parser.add_argument('--centers_against_per_team',action='store_true',dest='centers_against_per_team', default=False, help='layups and dunks attempted against all teams')
+
+parser.add_argument('--guards_against_per_team',action='store_true',dest='guards_against_per_team', default=False, help='layups and dunks attempted against all teams')
 
 args = parser.parse_args()
 
@@ -687,8 +749,103 @@ if args.two_pointers_made_against:
 
           print str(average(list)) + ',' + cur_team
           
-               
+if args.average_possesions_per_game:
+     for cur_team in teams_set:
+          list = []
+          
+          for game_reader in files:
+               team = "None"
+               if game_reader.GetHomeTeam() == cur_team:
+                    team = game_reader.GetHomeTeam()
+               if game_reader.GetAwayTeam() == cur_team:
+                    team = game_reader.GetAwayTeam()
 
+               if team == "None":
+                    continue
+               list.append(game_reader.Get2PointersAttemptsByTeam(team) + game_reader.Get3PointersAttemptsByTeam(team) +  game_reader.GetTurnoversByTeam(team) - game_reader.GetOffensiveReboundsByTeam(team) + int(0.4 * game_reader.Get1PointersAttemptsByTeam(team))) 
+
+          print str(average(list)) + ',' + cur_team
+
+if args.defensive_offensive_rating_per_team:
+     for cur_team in teams_set:
+          list_offensive = []
+          list_defensive = []
+          
+          for game_reader in files:
+               team = "None"
+               if game_reader.GetHomeTeam() == cur_team:
+                    team = game_reader.GetHomeTeam()
+                    number_of_scored_points = game_reader.GetHomeTeamScore()
+                    number_of_allowed_points = game_reader.GetAwayTeamScore()
+               if game_reader.GetAwayTeam() == cur_team:
+                    team = game_reader.GetAwayTeam()
+                    number_of_scored_points = game_reader.GetAwayTeamScore() 
+                    number_of_allowed_points = game_reader.GetHomeTeamScore()
+
+               if team == "None":
+                    continue
+               number_of_possesions = game_reader.Get2PointersAttemptsByTeam(team) + game_reader.Get3PointersAttemptsByTeam(team) +  game_reader.GetTurnoversByTeam(team) - game_reader.GetOffensiveReboundsByTeam(team) + int(0.4 * game_reader.Get1PointersAttemptsByTeam(team))
+               
+               list_offensive.append(float(number_of_scored_points)*100 / float(number_of_possesions) )
+               list_defensive.append(float(number_of_allowed_points)*100 / float (number_of_possesions))
+          print str(average(list_offensive)) + ',' + str(average(list_defensive)) + ',' + team
+
+
+if args.centers_against_per_team:
+     for cur_team in teams_set:
+          listem = []
+          
+          for game_reader in files:
+               team_against = "None"
+               if game_reader.GetHomeTeam() == cur_team:
+                    team_against = game_reader.GetAwayTeam()
+               if game_reader.GetAwayTeam() == cur_team:
+                    team_against = game_reader.GetHomeTeam()
+
+               if team == "None":
+                    continue
+          
+               for player in game_reader.GetPlayersByTeam(team_against):
+                   if player in centers_set:
+                       listem.append(game_reader.GetValueByPlayer(player))
+          print str(average(listem)) + ',' + cur_team
+
+if args.guards_against_per_team:
+     for cur_team in teams_set:
+          listem = []
+          
+          for game_reader in files:
+               team_against = "None"
+               if game_reader.GetHomeTeam() == cur_team:
+                    team_against = game_reader.GetAwayTeam()
+               if game_reader.GetAwayTeam() == cur_team:
+                    team_against = game_reader.GetHomeTeam()
+
+               if team == "None":
+                    continue
+          
+               for player in game_reader.GetPlayersByTeam(team_against):
+                   if player in guards_set:
+                       listem.append(game_reader.GetValueByPlayer(player))
+          print str(average(listem)) + ',' + cur_team
+    
+if args.layup_and_dunks_per_team:
+     for cur_team in teams_set:
+          listem = []
+          
+          for game_reader in files:
+               team = "None"
+               if game_reader.GetHomeTeam() == cur_team:
+                    team = game_reader.GetAwayTeam()
+               if game_reader.GetAwayTeam() == cur_team:
+                    team = game_reader.GetHomeTeam()
+
+               if team == "None":
+                    continue
+               
+               listem.append(game_reader.GetLayupByTeam(team) + game_reader.GetDunksByTeam(team))
+          print str(average(listem)) + ',' + cur_team
+    
 
 # if args.get_shooting_percentage_by_distance:
 #      attempts_per_distance = defaultdict(int)
