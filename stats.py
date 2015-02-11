@@ -178,6 +178,11 @@ class GameDBReader:
             if self.side_to_team[team_stats.attrib['side']]  == name:
                 return int(team_stats.attrib['p2m'])     
 
+    def Get1PointersMadeByTeam(self, name): 
+        for team_stats in self.root.findall('.//ts'):
+            if self.side_to_team[team_stats.attrib['side']]  == name:
+                return int(team_stats.attrib['ftm'])
+
     def GetAssistsByTeam(self, name): 
         for team_stats in self.root.findall('.//ts'):
             if self.side_to_team[team_stats.attrib['side']]  == name:
@@ -219,6 +224,12 @@ class GameDBReader:
         for player_stats in self.root.findall('.//player'):
             if player_stats.attrib['name'] == name:
                 return int(player_stats.attrib['points'])
+
+    def GetDefensiveReboundsByPlayer(self, name):
+        for player_stats in self.root.findall('.//player'):
+            if player_stats.attrib['name'] == name:
+                return int(player_stats.attrib['trb'])
+
 
     def GetValueByPlayer(self,name):
         for player_stats in self.root.findall('.//player'):
@@ -401,6 +412,9 @@ parser.add_argument('--layup_and_dunks_per_team',action='store_true',dest='layup
 parser.add_argument('--centers_against_per_team',action='store_true',dest='centers_against_per_team', default=False, help='layups and dunks attempted against all teams')
 
 parser.add_argument('--guards_against_per_team',action='store_true',dest='guards_against_per_team', default=False, help='layups and dunks attempted against all teams')
+
+parser.add_argument('--rebounds_percentage_per_player_all_teams',action='store_true',dest='rebounds_percentage_per_player_all_teams', default=False, help='rebound percentage per player')
+
 
 args = parser.parse_args()
 
@@ -794,6 +808,7 @@ if args.defensive_offensive_rating_per_team:
 if args.centers_against_per_team:
      for cur_team in teams_set:
           listem = []
+          points_listem = [] 
           
           for game_reader in files:
                team_against = "None"
@@ -808,7 +823,9 @@ if args.centers_against_per_team:
                for player in game_reader.GetPlayersByTeam(team_against):
                    if player in centers_set:
                        listem.append(game_reader.GetValueByPlayer(player))
-          print str(average(listem)) + ',' + cur_team
+                       points_listem.append(game_reader.GetPointsByPlayer(player))
+               
+          print str(average(listem)) + ',' + str(average(points_listem)) + "," + cur_team
 
 if args.guards_against_per_team:
      for cur_team in teams_set:
@@ -845,6 +862,25 @@ if args.layup_and_dunks_per_team:
                
                listem.append(game_reader.GetLayupByTeam(team) + game_reader.GetDunksByTeam(team))
           print str(average(listem)) + ',' + cur_team
+
+if args.rebounds_percentage_per_player_all_teams:
+    for cur_team in teams_set:
+        cur_player_def_rebounds = defaultdict(list)
+        cur_player_def_rebounds_options = defaultdict(list)
+
+        for game_reader in files:
+            other_team = game_reader.GetOpponent(cur_team)
+            misses = game_reader.Get2PointersAttemptsByTeam(other_team) + game_reader.Get3PointersAttemptsByTeam(other_team) - game_reader.Get3PointersMadeByTeam(other_team) - game_reader.Get2PointersMadeByTeam (other_team) + ((game_reader.Get1PointersAttemptsByTeam(other_team) - game_reader.Get1PointersMadeByTeam(other_team)) / 2)
+            for player in game_reader.GetPlayersByTeam(cur_team):
+                cur_player_def_rebounds[player].append(game_reader.GetDefensiveReboundsByPlayer(player)) 
+                cur_player_def_rebounds_options[player].append(misses)
+                
+
+        for player in cur_player_def_rebounds:
+            print player, cur_player_def_rebounds[player]
+            print player, cur_player_def_rebounds_options[player]
+            print str(float(sum(cur_player_def_rebounds[player]))/float(sum(cur_player_def_rebounds_options[player]))) + "," + str(average(cur_player_def_rebounds[player])) + "," + player + "," + cur_team
+                
     
 
 # if args.get_shooting_percentage_by_distance:
